@@ -16,6 +16,6 @@ app = FastAPI()
 # Incluir la aplicación FastAPI configurada en la capa de interfaz (Ejemplo de link: http://localhost:8000/api)
 app.mount("/api", fastapi_app)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+#if __name__ == "__main__":
+#    import uvicorn
+#    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
