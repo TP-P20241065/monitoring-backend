@@ -1,0 +1,11 @@
+PyJWT
+argon2-cffi
+SQLAlchemy
+fastapi
+uvicorn
+sqlalchemy
+pymysql
+passlib[bcrypt]
+python-dotenv
+pydantic
+gunicorn
