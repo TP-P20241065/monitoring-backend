@@ -3,6 +3,7 @@ from interface.api import app as fastapi_app
 from infrastructure.database import engine
 from domain.models import Base
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # Cargar las variables de entorno del archivo .env
 load_dotenv()
@@ -12,6 +13,15 @@ Base.metadata.create_all(bind=engine)
 
 # Crear la instancia de FastAPI
 app = FastAPI()
+
+# Configura CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite solicitudes de cualquier origen
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite los métodos (GET, POST, etc.)
+    allow_headers=["*"],  # Permite los encabezados
+)
 
 # Incluir la aplicación FastAPI configurada en la capa de interfaz (Ejemplo de link: http://localhost:8000/api)
 app.mount("/api", fastapi_app)
