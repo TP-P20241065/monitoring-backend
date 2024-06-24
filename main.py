@@ -14,16 +14,6 @@ Base.metadata.create_all(bind=engine)
 # Crear la instancia de FastAPI
 app = FastAPI()
 
-# Configuración de CORS
-origins = ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Incluir la aplicación FastAPI configurada en la capa de interfaz (Ejemplo de link: http://localhost:8000/api)
 app.mount("/api", fastapi_app)
 
