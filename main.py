@@ -15,21 +15,12 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 # Configura CORS
-origins = [
-    "http://localhost",
-    "https://zuri-alarm.vercel.app/",
-]
-
-methods = ["GET", "POST", "PUT", "DELETE"]
-
-headers = ["Content-Type", "Authorization"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=methods,
-    allow_headers=headers,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Incluir la aplicación FastAPI configurada en la capa de interfaz (Ejemplo de link: http://localhost:8000/api)
