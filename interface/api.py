@@ -10,6 +10,7 @@ import os
 from infrastructure.database import get_db
 from application.services import authenticate_user, get_password_hash, generate_password
 from domain.models import User, Unit, Camera, Report
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
 app = FastAPI()
 
@@ -18,6 +19,15 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
+conf = ConnectionConfig(
+    MAIL_USERNAME = os.getenv("EMAIL"),
+    MAIL_PASSWORD = os.getenv("PASSWORD"),
+    MAIL_FROM = os.getenv("EMAIL"),
+    MAIL_PORT = 587,
+    MAIL_SERVER = "smtp.gmail.com",
+    MAIL_TLS = True,
+    MAIL_SSL = False
+)
 
 # Modelos de Pydantic
 class UserModel(BaseModel):
@@ -103,6 +113,15 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         raise HTTPException(status_code=401, detail="No se pudieron validar las credenciales")
     return user
 
+# Datos de correo destinatario
+def send_email(email, firstName, password):
+    message = MessageSchema(
+        subject="Nueva contraseña",
+        recipients=email,
+        body="Hola " + firstName + ", esta es su contraseña generada de su cuenta de ZuriCam:\n\n" + password,
+        subtype="html"
+    )
+    return message
 
 # Endpoint para generar token de acceso
 @app.post("/token", response_model=TokenModel)
@@ -141,7 +160,8 @@ def search_users(email: Optional[str] = None, db: Session = Depends(get_db)):
 
 # Endpoint para crear un nuevo usuario
 @app.post("/users/", response_model=UserModel)
-def create_user(user: UserModel, db: Session = Depends(get_db)):
+async def create_user(user: UserModel, db: Session = Depends(get_db)):
+    password = generate_password()
     db_user = User(
         Username=user.Username,
         FirstName=user.FirstName,
@@ -149,11 +169,15 @@ def create_user(user: UserModel, db: Session = Depends(get_db)):
         Email=user.Email,
         Headquarter=user.Headquarter,
         Permissions=user.Permissions,
-        HashedPassword=get_password_hash(generate_password())
+        HashedPassword=get_password_hash(password)
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    message = send_email(user.FirstName, user.Email, password)
+    fm = FastMail(conf)
+    await fm.send_message(message)
     return db_user
 
 
