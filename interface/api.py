@@ -20,14 +20,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 
 conf = ConnectionConfig(
-    MAIL_USERNAME = os.getenv("EMAIL"),
-    MAIL_PASSWORD = os.getenv("PASSWORD"),
-    MAIL_FROM = os.getenv("EMAIL"),
-    MAIL_PORT = 587,
-    MAIL_SERVER = "smtp.gmail.com",
-    MAIL_TLS = True,
-    MAIL_SSL = False
+    MAIL_USERNAME=os.getenv("EMAIL"),
+    MAIL_PASSWORD=os.getenv("PASSWORD"),
+    MAIL_FROM=os.getenv("EMAIL"),
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp.gmail.com",
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True
 )
+
 
 # Modelos de Pydantic
 class UserModel(BaseModel):
