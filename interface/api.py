@@ -115,6 +115,17 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         raise HTTPException(status_code=401, detail="No se pudieron validar las credenciales")
     return user
 
+# Datos de correo a enviar reporte
+def send_report(report):
+    print("Reporte")
+    print(report.DateTime)
+    message = MessageSchema(
+        subject="Reporte de incidencia",
+        recipients=[os.getenv("EMAIL"),],
+        body=str("Reporte con fecha " + str(report.DateTime) + "| Incidencia: " + str(report.Incident) + "| Dirección: " + str(report.Address) + " | Enlace de rastreo: " + str(report.TrackingLink)),
+        subtype="html"
+    )
+    return message
 
 # Datos de correo destinatario
 def send_email(email, firstName, password):
@@ -339,7 +350,7 @@ def search_reports(incident: Optional[str] = None, address: Optional[str] = None
 
 # Endpoint para crear un nuevo reporte
 @app.post("/reports/", response_model=ReportModel)
-def create_report(report: ReportModel, db: Session = Depends(get_db)):
+async def create_report(report: ReportModel, db: Session = Depends(get_db)):
     db_report = Report(
         DateTime=report.DateTime,
         Address=report.Address,
@@ -347,6 +358,10 @@ def create_report(report: ReportModel, db: Session = Depends(get_db)):
         TrackingLink=report.TrackingLink,
         Image=report.Image
     )
+    message = send_report(db_report)
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
     db.add(db_report)
     db.commit()
     db.refresh(db_report)
