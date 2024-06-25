@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import timedelta, datetime
 import jwt
@@ -37,7 +37,7 @@ class UserModel(BaseModel):
     Username: str
     FirstName: str
     LastName: str
-    Email: str
+    Email: EmailStr
     Headquarter: int
     Permissions: List[int]
 
@@ -119,8 +119,8 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
 def send_email(email, firstName, password):
     message = MessageSchema(
         subject="Nueva contraseña",
-        recipients=email,
-        body="Hola " + firstName + ", esta es su contraseña generada de su cuenta de ZuriCam:\n\n" + password,
+        recipients=[email],
+        body="Hola " + str(firstName) + ", esta es su contraseña generada de su cuenta de ZuriCam:\n\n" + str(password),
         subtype="html"
     )
     return message
@@ -177,7 +177,8 @@ async def create_user(user: UserModel, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
-    message = send_email(user.FirstName, user.Email, password)
+    message = send_email(user.Email, user.FirstName, password)
+
     fm = FastMail(conf)
     await fm.send_message(message)
     return db_user
