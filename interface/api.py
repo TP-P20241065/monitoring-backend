@@ -115,6 +115,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         raise HTTPException(status_code=401, detail="No se pudieron validar las credenciales")
     return user
 
+
 # Datos de correo destinatario
 def send_email(email, firstName, password):
     message = MessageSchema(
@@ -124,6 +125,7 @@ def send_email(email, firstName, password):
         subtype="html"
     )
     return message
+
 
 # Endpoint para generar token de acceso
 @app.post("/token", response_model=TokenModel)
@@ -192,6 +194,25 @@ def update_user(user_id: int, updated_user: UserModel, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     for key, value in updated_user.dict(exclude_unset=True).items():
         setattr(db_user, key, value)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+# Endpoint para restablecer contraseña de un usuario existente
+@app.put("/users/{user_id}", response_model=UserModel)
+async def update_user(user_id: int, updated_user: UserModel, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.Id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    for key, value in updated_user.dict(exclude_unset=True).items():
+        setattr(db_user, key, value)
+
+    password = generate_password()
+    db_user.HashedPassword = get_password_hash(password)
+    message = send_email(db_user.Email, db_user.FirstName, password)
+    fm = FastMail(conf)
+    await fm.send_message(message)
     db.commit()
     db.refresh(db_user)
     return db_user
